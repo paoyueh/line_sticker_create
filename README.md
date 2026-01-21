@@ -2,6 +2,12 @@
 
 一個使用 React 開發的 LINE 貼圖自動生成工具，整合 Gemini API 進行智能圖片生成和處理。
 
+## 🌐 使用頁面
+
+**線上版本**：https://scorpioliu0953.github.io/line_sticker_create/
+
+直接在瀏覽器中使用，無需安裝任何軟體。
+
 ## 功能特色
 
 - 🔑 **API Key 管理**：安全輸入 Gemini API Key
