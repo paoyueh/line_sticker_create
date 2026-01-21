@@ -30,6 +30,7 @@ function App() {
   // 步驟 6: 文字描述
   const [descriptions, setDescriptions] = useState([])
   const [generatingDescriptions, setGeneratingDescriptions] = useState(false)
+  const [excludedTexts, setExcludedTexts] = useState('') // 排除的文字（每行一個）
   
   // 步驟 6-8: 8宮格生成、去背、裁切
   const [gridImages, setGridImages] = useState([]) // 8宮格圖片陣列
@@ -157,7 +158,13 @@ function App() {
     }
 
     try {
-      const items = await generateImageDescriptionsWithText(apiKey, theme, finalTextStyle, count)
+      // 處理排除文字：將文字按行分割，過濾空行，去除前後空白
+      const excludedTextList = excludedTexts
+        .split('\n')
+        .map(line => line.trim())
+        .filter(line => line.length > 0)
+      
+      const items = await generateImageDescriptionsWithText(apiKey, theme, finalTextStyle, count, excludedTextList)
       setDescriptions(items)
       setProgress('文字描述生成完成，可以編輯後繼續')
     } catch (error) {
@@ -571,6 +578,34 @@ function App() {
         {textStyleConfirmed && (
           <div className="step-section">
             <h2>步驟 6: 生成文字描述（可編輯）</h2>
+            
+            {/* 排除文字輸入框 */}
+            <div className="form-group" style={{ marginBottom: '20px' }}>
+              <label htmlFor="excludedTexts" style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
+                排除這些文字（選填，每行一個）：
+              </label>
+              <textarea
+                id="excludedTexts"
+                value={excludedTexts}
+                onChange={(e) => setExcludedTexts(e.target.value)}
+                placeholder="例如：&#10;你好&#10;謝謝&#10;再見&#10;&#10;（每行輸入一個要排除的文字，這樣在延伸同一系列時可以避免文字重複）"
+                className="form-input"
+                style={{
+                  width: '100%',
+                  minHeight: '100px',
+                  padding: '10px',
+                  fontSize: '14px',
+                  fontFamily: 'inherit',
+                  border: '1px solid #ddd',
+                  borderRadius: '4px',
+                  resize: 'vertical'
+                }}
+              />
+              <p style={{ marginTop: '5px', fontSize: '12px', color: '#666' }}>
+                💡 提示：輸入之前已使用的文字，生成時會自動排除這些文字，避免重複。適合延伸同一系列貼圖時使用。
+              </p>
+            </div>
+            
             <button
               className="btn btn-primary"
               onClick={handleGenerateDescriptions}

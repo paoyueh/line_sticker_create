@@ -41,30 +41,48 @@ export async function generateTextStyle(apiKey, theme, characterDescription) {
  * @param {string} theme - 主題說明
  * @param {string} textStyle - 文字風格描述
  * @param {number} count - 需要生成的圖片數量
+ * @param {Array<string>} excludedTexts - 要排除的文字列表（可選）
  * @returns {Promise<Array<{description: string, text: string}>>} 圖片描述和文字陣列
  */
-export async function generateImageDescriptionsWithText(apiKey, theme, textStyle, count) {
+export async function generateImageDescriptionsWithText(apiKey, theme, textStyle, count, excludedTexts = []) {
   try {
     const genAI = new GoogleGenerativeAI(apiKey)
     const model = genAI.getGenerativeModel({ model: 'gemini-3-pro-preview' })
+
+    // 構建排除文字的提示
+    let excludedTextsPrompt = ''
+    if (excludedTexts && excludedTexts.length > 0) {
+      const excludedList = excludedTexts.join('、')
+      excludedTextsPrompt = `
+⚠️⚠️⚠️ 絕對禁止使用以下文字（這些文字已經在之前的系列中使用過，必須完全避免）：
+${excludedTexts.map(text => `- "${text}"`).join('\n')}
+
+**嚴格禁止**：
+- 不能使用以上任何一個文字
+- 不能使用與以上文字相似或包含以上文字的文字
+- 不能使用以上文字的任何變體、同義詞或相似表達
+- 生成的文字必須與以上所有文字完全不同
+`
+    }
 
     const prompt = `你是一個專業的 LINE 貼圖設計師。根據以下主題和文字風格，生成 ${count} 個不同的貼圖圖片描述和要添加的文字。
 
 主題說明：${theme}
 文字風格：${textStyle}
-
+${excludedTextsPrompt}
 嚴格要求：
 1. 每個描述應該對應一張獨特的貼圖圖片
 2. **所有文字內容絕對不能重複，每個文字必須完全唯一**（例如：不能有「飛越越」和「飛越」這樣的重複，不能有「沒問題」出現兩次）
 3. 文字內容不能有重複的字詞、短語或相似表達
-4. 風格要適合 LINE 貼圖（可愛、簡潔、表情豐富）
-5. 人物或角色要保持一致性（如果是角色貼圖）
-6. 每張貼圖應該有不同的表情、動作或情境
-7. 描述要簡潔明確，適合用於圖片生成
-8. 每張貼圖需要添加簡短的文字（1-5個字），文字要符合貼圖的情境和表情，並遵循文字風格：${textStyle}
-9. 文字必須多樣化，避免使用相似的字詞組合
+4. ${excludedTexts && excludedTexts.length > 0 ? '**絕對不能使用已排除的文字列表中的任何文字**' : ''}
+5. 風格要適合 LINE 貼圖（可愛、簡潔、表情豐富）
+6. 人物或角色要保持一致性（如果是角色貼圖）
+7. 每張貼圖應該有不同的表情、動作或情境
+8. 描述要簡潔明確，適合用於圖片生成
+9. 每張貼圖需要添加簡短的文字（1-5個字），文字要符合貼圖的情境和表情，並遵循文字風格：${textStyle}
+10. 文字必須多樣化，避免使用相似的字詞組合
 
-請仔細檢查，確保所有 ${count} 個文字都完全不相同，沒有任何重複或相似。
+請仔細檢查，確保所有 ${count} 個文字都完全不相同，沒有任何重複或相似，${excludedTexts && excludedTexts.length > 0 ? '並且完全避開已排除的文字列表' : ''}。
 
 請以 JSON 格式輸出，格式如下：
 [
@@ -108,15 +126,23 @@ export async function generateImageDescriptionsWithText(apiKey, theme, textStyle
       text: (item.text || item.txt || '文字').trim()
     }))
 
-    // 檢查並移除重複的文字
+    // 檢查並移除重複的文字，以及與排除文字重複的文字
     const usedTexts = new Set()
+    const excludedTextsSet = new Set(excludedTexts || [])
     const uniqueItems = []
     for (const item of items) {
-      if (!usedTexts.has(item.text)) {
-        usedTexts.add(item.text)
+      const text = item.text.trim()
+      // 檢查是否與排除的文字重複
+      if (excludedTextsSet.has(text)) {
+        console.warn(`發現與排除文字重複: ${text}，已移除`)
+        continue
+      }
+      // 檢查是否與已使用的文字重複
+      if (!usedTexts.has(text)) {
+        usedTexts.add(text)
         uniqueItems.push(item)
       } else {
-        console.warn(`發現重複文字: ${item.text}，已移除`)
+        console.warn(`發現重複文字: ${text}，已移除`)
       }
     }
     items = uniqueItems
@@ -125,14 +151,19 @@ export async function generateImageDescriptionsWithText(apiKey, theme, textStyle
     if (items.length < count) {
       const additionalCount = count - items.length
       const existingTexts = Array.from(usedTexts).join('、')
+      const excludedList = excludedTexts && excludedTexts.length > 0 ? excludedTexts.join('、') : ''
+      const excludedTextsSection = excludedList ? `\n⚠️ 絕對禁止使用以下已排除的文字：${excludedList}` : ''
+      
       const additionalPrompt = `根據主題「${theme}」和文字風格「${textStyle}」，再生成 ${additionalCount} 個不同的貼圖描述和文字。
 
 嚴格要求：
 1. 文字必須與以下已使用的文字完全不同：${existingTexts}
-2. 不能有任何重複、相似或包含已使用文字的情況
-3. 每個文字必須完全唯一
-4. 文字長度 1-5 個字
-5. 遵循文字風格：${textStyle}
+2. ${excludedList ? `**絕對不能使用以下已排除的文字：${excludedList}**` : ''}
+3. 不能有任何重複、相似或包含已使用文字的情況
+4. 每個文字必須完全唯一
+5. 文字長度 1-5 個字
+6. 遵循文字風格：${textStyle}
+${excludedTextsSection}
 
 以 JSON 格式輸出：[{"description": "描述", "text": "文字"}, ...]`
       
@@ -149,13 +180,20 @@ export async function generateImageDescriptionsWithText(apiKey, theme, textStyle
             text: (item.text || item.txt || '文字').trim()
           }))
           
-          // 再次檢查重複
+          // 再次檢查重複（包括排除文字）
           for (const newItem of newItems) {
-            if (!usedTexts.has(newItem.text)) {
-              usedTexts.add(newItem.text)
+            const text = newItem.text.trim()
+            // 檢查是否與排除的文字重複
+            if (excludedTextsSet.has(text)) {
+              console.warn(`補充項目中發現與排除文字重複: ${text}，已移除`)
+              continue
+            }
+            // 檢查是否與已使用的文字重複
+            if (!usedTexts.has(text)) {
+              usedTexts.add(text)
               items.push(newItem)
             } else {
-              console.warn(`補充項目中發現重複文字: ${newItem.text}，已移除`)
+              console.warn(`補充項目中發現重複文字: ${text}，已移除`)
             }
           }
         }
@@ -178,24 +216,35 @@ export async function generateImageDescriptionsWithText(apiKey, theme, textStyle
       })
     }
 
-    // 最終檢查：確保所有文字都是唯一的
+    // 最終檢查：確保所有文字都是唯一的，且不與排除文字重複
     const finalTexts = new Set()
     const finalItems = []
     for (const item of items) {
-      if (!finalTexts.has(item.text)) {
-        finalTexts.add(item.text)
-        finalItems.push(item)
-      } else {
-        // 如果還有重複，添加編號
-        let uniqueText = item.text
+      let text = item.text.trim()
+      // 如果與排除文字重複，添加編號
+      if (excludedTextsSet.has(text)) {
         let counter = 1
-        while (finalTexts.has(uniqueText)) {
-          uniqueText = `${item.text}${counter}`
+        let uniqueText = `${text}${counter}`
+        while (excludedTextsSet.has(uniqueText) || finalTexts.has(uniqueText)) {
           counter++
+          uniqueText = `${text}${counter}`
         }
-        finalTexts.add(uniqueText)
-        finalItems.push({ ...item, text: uniqueText })
+        text = uniqueText
+        console.warn(`文字 "${item.text}" 與排除文字重複，已改為 "${text}"`)
       }
+      // 如果與已使用的文字重複，添加編號
+      if (finalTexts.has(text)) {
+        let counter = 1
+        let uniqueText = `${text}${counter}`
+        while (excludedTextsSet.has(uniqueText) || finalTexts.has(uniqueText)) {
+          counter++
+          uniqueText = `${text}${counter}`
+        }
+        text = uniqueText
+        console.warn(`文字 "${item.text}" 重複，已改為 "${text}"`)
+      }
+      finalTexts.add(text)
+      finalItems.push({ ...item, text })
     }
 
     return finalItems.slice(0, count)
