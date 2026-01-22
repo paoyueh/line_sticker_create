@@ -105,6 +105,22 @@ Design Requirements:
       throw new Error(`API 錯誤: ${data.error.message || JSON.stringify(data.error)}`)
     }
     
+    // 檢查 promptFeedback 中的 blockReason（PROHIBITED_CONTENT 等）
+    if (data.promptFeedback && data.promptFeedback.blockReason) {
+      const blockReason = data.promptFeedback.blockReason
+      const blockMessage = data.promptFeedback.blockMessage || ''
+      
+      let errorMessage = `內容被 Google 安全過濾器阻止 (${blockReason})`
+      
+      if (blockReason === 'PROHIBITED_CONTENT') {
+        errorMessage = `生成的內容被 Google 安全過濾器判定為違規內容。\n\n可能的原因：\n1. 輸入的圖片內容觸發了安全策略\n2. 描述文字中包含可能敏感的詞彙\n3. 生成的內容被誤判為不當內容\n\n建議：\n1. 檢查輸入的角色圖片是否包含可能敏感的內容\n2. 嘗試調整描述文字，使用更中性的詞彙\n3. 如果認為這是誤判，可以稍後再試或向 Google 反饋\n\n詳細信息：${blockMessage || '無額外說明'}`
+      } else if (blockReason === 'SAFETY') {
+        errorMessage = `內容被安全過濾器阻止。\n\n建議：\n1. 嘗試調整描述文字，避免可能敏感的內容\n2. 簡化 prompt，使用更中性的描述\n3. 如果認為這是誤判，可以向 Google 反饋\n\n詳細信息：${blockMessage || '無額外說明'}`
+      }
+      
+      throw new Error(errorMessage)
+    }
+    
     // 檢查 finishReason
     if (data.candidates && data.candidates[0]) {
       const candidate = data.candidates[0]
@@ -313,6 +329,22 @@ Technical Requirements:
     // 檢查是否有錯誤
     if (data.error) {
       throw new Error(`API 錯誤: ${data.error.message || JSON.stringify(data.error)}`)
+    }
+    
+    // 檢查 promptFeedback 中的 blockReason（PROHIBITED_CONTENT 等）
+    if (data.promptFeedback && data.promptFeedback.blockReason) {
+      const blockReason = data.promptFeedback.blockReason
+      const blockMessage = data.promptFeedback.blockMessage || ''
+      
+      let errorMessage = `內容被 Google 安全過濾器阻止 (${blockReason})`
+      
+      if (blockReason === 'PROHIBITED_CONTENT') {
+        errorMessage = `生成的內容被 Google 安全過濾器判定為違規內容。\n\n可能的原因：\n1. 輸入的圖片內容觸發了安全策略\n2. 描述文字中包含可能敏感的詞彙\n3. 生成的內容被誤判為不當內容\n\n建議：\n1. 檢查輸入的角色圖片是否包含可能敏感的內容\n2. 嘗試調整描述文字，使用更中性的詞彙\n3. 如果認為這是誤判，可以稍後再試或向 Google 反饋\n\n詳細信息：${blockMessage || '無額外說明'}`
+      } else if (blockReason === 'SAFETY') {
+        errorMessage = `內容被安全過濾器阻止。\n\n建議：\n1. 嘗試調整描述文字，避免可能敏感的內容\n2. 簡化 prompt，使用更中性的描述\n3. 如果認為這是誤判，可以向 Google 反饋\n\n詳細信息：${blockMessage || '無額外說明'}`
+      }
+      
+      throw new Error(errorMessage)
     }
     
     // 檢查 finishReason
@@ -524,6 +556,22 @@ Technical Requirements:
     // 檢查是否有錯誤
     if (data.error) {
       throw new Error(`API 錯誤: ${data.error.message || JSON.stringify(data.error)}`)
+    }
+    
+    // 檢查 promptFeedback 中的 blockReason（PROHIBITED_CONTENT 等）
+    if (data.promptFeedback && data.promptFeedback.blockReason) {
+      const blockReason = data.promptFeedback.blockReason
+      const blockMessage = data.promptFeedback.blockMessage || ''
+      
+      let errorMessage = `內容被 Google 安全過濾器阻止 (${blockReason})`
+      
+      if (blockReason === 'PROHIBITED_CONTENT') {
+        errorMessage = `生成的內容被 Google 安全過濾器判定為違規內容。\n\n可能的原因：\n1. 輸入的圖片內容觸發了安全策略\n2. 描述文字中包含可能敏感的詞彙\n3. 生成的內容被誤判為不當內容\n\n建議：\n1. 檢查輸入的角色圖片是否包含可能敏感的內容\n2. 嘗試調整描述文字，使用更中性的詞彙\n3. 如果認為這是誤判，可以稍後再試或向 Google 反饋\n\n詳細信息：${blockMessage || '無額外說明'}`
+      } else if (blockReason === 'SAFETY') {
+        errorMessage = `內容被安全過濾器阻止。\n\n建議：\n1. 嘗試調整描述文字，避免可能敏感的內容\n2. 簡化 prompt，使用更中性的描述\n3. 如果認為這是誤判，可以向 Google 反饋\n\n詳細信息：${blockMessage || '無額外說明'}`
+      }
+      
+      throw new Error(errorMessage)
     }
     
     // 檢查 finishReason
@@ -877,6 +925,22 @@ Generate the complete 8-grid image with STRICT adherence to cell boundaries. Eac
       throw new Error(`API 錯誤: ${data.error.message || JSON.stringify(data.error)}`)
     }
     
+    // 檢查 promptFeedback 中的 blockReason（PROHIBITED_CONTENT 等）
+    if (data.promptFeedback && data.promptFeedback.blockReason) {
+      const blockReason = data.promptFeedback.blockReason
+      const blockMessage = data.promptFeedback.blockMessage || ''
+      
+      let errorMessage = `內容被 Google 安全過濾器阻止 (${blockReason})`
+      
+      if (blockReason === 'PROHIBITED_CONTENT') {
+        errorMessage = `生成的內容被 Google 安全過濾器判定為違規內容。\n\n可能的原因：\n1. 輸入的圖片內容觸發了安全策略\n2. 描述文字中包含可能敏感的詞彙\n3. 生成的內容被誤判為不當內容\n\n建議：\n1. 檢查輸入的角色圖片是否包含可能敏感的內容\n2. 嘗試調整貼圖描述，使用更中性的詞彙\n3. 簡化或修改某些貼圖的文字內容\n4. 如果認為這是誤判，可以稍後再試或向 Google 反饋\n\n詳細信息：${blockMessage || '無額外說明'}`
+      } else if (blockReason === 'SAFETY') {
+        errorMessage = `內容被安全過濾器阻止。\n\n建議：\n1. 嘗試調整描述文字，避免可能敏感的內容\n2. 簡化 prompt，使用更中性的描述\n3. 如果認為這是誤判，可以向 Google 反饋\n\n詳細信息：${blockMessage || '無額外說明'}`
+      }
+      
+      throw new Error(errorMessage)
+    }
+    
     if (data.candidates && data.candidates[0]) {
       const candidate = data.candidates[0]
       
@@ -1116,6 +1180,22 @@ Final Verification:
     // 檢查是否有錯誤
     if (data.error) {
       throw new Error(`API 錯誤: ${data.error.message || JSON.stringify(data.error)}`)
+    }
+    
+    // 檢查 promptFeedback 中的 blockReason（PROHIBITED_CONTENT 等）
+    if (data.promptFeedback && data.promptFeedback.blockReason) {
+      const blockReason = data.promptFeedback.blockReason
+      const blockMessage = data.promptFeedback.blockMessage || ''
+      
+      let errorMessage = `內容被 Google 安全過濾器阻止 (${blockReason})`
+      
+      if (blockReason === 'PROHIBITED_CONTENT') {
+        errorMessage = `生成的內容被 Google 安全過濾器判定為違規內容。\n\n可能的原因：\n1. 輸入的圖片內容觸發了安全策略\n2. 描述文字中包含可能敏感的詞彙\n3. 生成的內容被誤判為不當內容\n\n建議：\n1. 檢查輸入的角色圖片是否包含可能敏感的內容\n2. 嘗試調整描述文字，使用更中性的詞彙\n3. 如果認為這是誤判，可以稍後再試或向 Google 反饋\n\n詳細信息：${blockMessage || '無額外說明'}`
+      } else if (blockReason === 'SAFETY') {
+        errorMessage = `內容被安全過濾器阻止。\n\n建議：\n1. 嘗試調整描述文字，避免可能敏感的內容\n2. 簡化 prompt，使用更中性的描述\n3. 如果認為這是誤判，可以向 Google 反饋\n\n詳細信息：${blockMessage || '無額外說明'}`
+      }
+      
+      throw new Error(errorMessage)
     }
     
     // 檢查 finishReason
