@@ -4,7 +4,7 @@
 
 ## 🌐 使用頁面
 
-**線上版本**：https://scorpioliu0953.github.io/line_sticker_create/
+**原始線上版本**：https://scorpioliu0953.github.io/line_sticker_create/
 
 直接在瀏覽器中使用，無需安裝任何軟體。
 
